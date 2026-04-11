@@ -1,48 +1,47 @@
-# cstmzWrt
+# AutoBuildImmortalWrt
 
-基于 [OpenWrt-Rpi](https://github.com/SuLingGG/OpenWrt-Rpi)
+快速构建自定义 ImmortalWrt 固件的 GitHub Actions 工作流。
 
-- 更改了默认后台`10.0.0.1`为 `http://192.168.3.1`, 用户名 `root`密码 `Huawei2#$`
-- 添加 `passwall` `hello-world` `vssr`
-- 默认主题 `bootstrap` 主题
+## 主要功能
 
-## 项目介绍
+- 🎯 自定义固件大小（推荐 1GB-2GB，默认 1GB）
+- 🐳 可选预装 Docker
+- 🛒 可选集成应用商店（luci-app-store）
+- 🔧 支持添加第三方软件包
+- 🌐 支持选择 LuCI 版本（24.10.0-24.10.5）
+- 🔌 支持多机型（Rockchip、Raspberry Pi、x86-64 等）
+- 📱 支持 ISO 安装器格式
+- 🌍 支持自定义管理地址 IP
+- 📞 支持 PPPoE 拨号配置
 
-1. 提供适配于 树莓派全系、Rockchip 平台、ipq40xx 平台以及 x86 平台设备的 OpenWrt 固件
-2. 包含丰富的 OpenWrt 原版 LuCI 插件及社区 LuCI 插件
-3. 固件跟随源码更新自动编译，确保获得最新体验
-4. 预配置本地 kmod 软件源，远离 kmod 依赖冲突
-5. 集成绝大多数有线、无线、3G / 4G 网卡驱动，无需额外安装
-6. 预置最新版 Clash 核心、预置 oh-my-zsh，最大程度减少配置成本
-7. 提供全格式固件 / 文件 (ext4/squashfs/ubi/initramfs/rootfs)
-8. 在 [OpenWrt-Rpi](https://github.com/SuLingGG/OpenWrt-Rpi) 的基础上添加了第三方网络插件`passwall`，`hello-world`
-9. 修改默认的管理后台地址为 `http://192.168.3.1`, 用户名 `root`密码 `Huawei12#$`
+## 快速开始
 
-在线自定义编译固件： https://supes.top/ 
+1. Fork 本项目
+2. 点击 Actions 选择相应工作流
+3. 点击 Run workflow 并填入参数
+4. 等待构建完成后从 Releases 下载固件
 
-## 文档
+## 固件默认属性
 
-- [OpenWrt-Rpi](https://github.com/SuLingGG/OpenWrt-Rpi) 相关文档介绍：[https://doc.openwrt.cc/2-OpenWrt-Rpi](https://doc.openwrt.cc/2-OpenWrt-Rpi)
+| 设备类型 | 配置 | 说明 |
+|---------|------|------|
+| 单网口 | DHCP | 自动获得 IP |
+| 多网口 | WAN=DHCP, LAN=192.168.100.1 | eth0 为 WAN，其余为 LAN |
+| 防火墙 | WAN 入站开启 | 首次调试后建议关闭 |
 
-## 参阅
+## 重要说明
 
-- OpenWrt 源码项目
-  - [openwrt/openwrt](https://github.com/openwrt/openwrt/)
-  - [coolsnowwolf/lede](https://github.com/coolsnowwolf/lede)
-  - [immortalwrt/immortalwrt](https://github.com/immortalwrt/immortalwrt)
+- **旁路由用户**：单网口采用 DHCP 模式，使用前需在上级路由查看分配的 IP
+- **多网口设备**：可自定义 LAN IP，避免与光猫或其他路由器冲突，大多数用户无需修改
+- **防火墙配置**：初期为便利设置开启，完成调试后建议关闭（网络 → 防火墙 → WAN 入站 → 拒绝）
+- **自定义配置**：所有网络属性可通过 `files/etc/uci-defaults/99-custom.sh` 修改
 
-- OpenWrt 构建项目
-  - [openwrt/buildbot](https://git.openwrt.org/?p=buildbot.git;a=summary)
-  - [P3TERX/Actions-OpenWrt](https://github.com/P3TERX/Actions-OpenWrt)
-  - [immortalwrt/opde](https://github.com/immortalwrt/opde)
-  - [klever1988/nanopi-openwrt](https://github.com/klever1988/nanopi-openwrt)
+## 支持的机型
 
-- Action 项目
-  - [ncipollo/release-action](https://github.com/ncipollo/release-action)
-  - [mknejp/delete-release-assets](https://github.com/mknejp/delete-release-assets)
-  - [GitRML/delete-workflow-runs](https://github.com/GitRML/delete-workflow-runs)
-  - [easingthemes/ssh-deploy](https://github.com/easingthemes/ssh-deploy)
-  - [easimon/maximize-build-space](https://github.com/easimon/maximize-build-space)
+查看完整列表：[SUPPORT.md](SUPPORT.md)
 
-## 固件预览
-![image](https://user-images.githubusercontent.com/88020021/219606078-203fefc6-a645-410c-ab69-b2b1a4bdb038.png)
+## 相关项目
+
+- [RunFilesBuilder](https://github.com/wukongdaily/RunFilesBuilder) - Run 插件生成器
+- [DockerTarBuilder](https://github.com/wukongdaily/DockerTarBuilder) - Docker 离线镜像生成器
+- [img-installer](https://github.com/wukongdaily/img-installer) - ISO 安装器
