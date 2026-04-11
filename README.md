@@ -1,4 +1,4 @@
-# AutoBuildImmortalWrt
+# ImmortalWrt build Action
 
 快速构建自定义 ImmortalWrt 固件的 GitHub Actions 工作流。
 
