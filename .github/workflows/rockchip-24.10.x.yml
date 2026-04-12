@@ -75,34 +75,6 @@ on:
         description: '设置软件包大小 单位(MB)'
         required: true
         default: '1024'
-      enable_store:
-        description: "集成 store 商店"
-        required: false
-        type: boolean
-        default: false
-      include_docker:
-        description: |
-          是否编译 Docker 插件
-        required: true
-        default: 'no'
-        type: choice
-        options:
-          - 'yes'
-          - 'no'
-      enable_pppoe:
-        description: "是否配置PPPoE拨号信息?"
-        required: true
-        default: 'no'
-        type: choice
-        options:
-        - 'yes'
-        - 'no'
-      pppoe_account:
-        description: "宽带账号 (若启用PPPoE)"
-        required: false
-      pppoe_password:
-        description: "宽带密码 (若启用PPPoE)"
-        required: false
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -114,11 +86,6 @@ jobs:
       profile: ${{ steps.set-env.outputs.profile }}
       custom_router_ip: ${{ steps.set-env.outputs.custom_router_ip }}
       rootfs_partsize: ${{ steps.set-env.outputs.rootfs_partsize }}
-      include_docker: ${{ steps.set-env.outputs.include_docker }}
-      enable_store: ${{ steps.set-env.outputs.enable_store }}
-      enable_pppoe: ${{ steps.set-env.outputs.enable_pppoe }}
-      pppoe_account: ${{ steps.set-env.outputs.pppoe_account }}
-      pppoe_password: ${{ steps.set-env.outputs.pppoe_password }}
       build_tag: ${{ steps.set-env.outputs.build_tag }}
     steps:
       - name: Checkout code
@@ -130,11 +97,6 @@ jobs:
           echo "profile=${{ github.event.inputs.profile || 'friendlyarm_nanopi-r2s' }}" >> $GITHUB_OUTPUT
           echo "custom_router_ip=${{ github.event.inputs.custom_router_ip || '10.8.8.1' }}" >> $GITHUB_OUTPUT
           echo "rootfs_partsize=${{ github.event.inputs.rootfs_partsize || '1024' }}" >> $GITHUB_OUTPUT
-          echo "include_docker=${{ github.event.inputs.include_docker || 'no' }}" >> $GITHUB_OUTPUT
-          echo "enable_store=${{ github.event.inputs.enable_store || 'false' }}" >> $GITHUB_OUTPUT
-          echo "enable_pppoe=${{ github.event.inputs.enable_pppoe || 'no' }}" >> $GITHUB_OUTPUT
-          echo "pppoe_account=${{ github.event.inputs.pppoe_account || '' }}" >> $GITHUB_OUTPUT
-          echo "pppoe_password=${{ github.event.inputs.pppoe_password || '' }}" >> $GITHUB_OUTPUT
           echo "build_tag=${{ github.event.inputs.profile || 'friendlyarm_nanopi-r2s' }}" >> $GITHUB_OUTPUT
 
       - name: Set executable permissions
@@ -144,33 +106,8 @@ jobs:
         run: |
           mkdir -p "${{ github.workspace }}/custom"
           echo "${{ steps.set-env.outputs.custom_router_ip }}" > "${{ github.workspace }}/custom/custom_router_ip.txt"
-          echo "您设置的Rockchip软路由管理地址是:${{ steps.set-env.outputs.custom_router_ip }}"
+          echo "You set the Rockchip router management address to:${{ steps.set-env.outputs.custom_router_ip }}"
       
-      - name: Validate PPPoE Inputs
-        run: |
-          if [[ "${{ steps.set-env.outputs.enable_pppoe }}" == "yes" ]]; then
-            if [[ -z "${{ steps.set-env.outputs.pppoe_account }}" || -z "${{ steps.set-env.outputs.pppoe_password }}" ]]; then
-              echo "Error: PPPoE account and password must be provided when PPPoE is enabled!"
-              exit 1
-            fi
-          fi
-      
-      - name: Check Docker
-        run: |
-          if [[ "${{ steps.set-env.outputs.include_docker }}" == "yes" ]]; then
-             echo 'CUSTOM_PACKAGES="$CUSTOM_PACKAGES docker"' >> shell/custom-packages.sh
-             echo "✅ 已为Rockchip平台补充 docker 组件"
-          fi
-      
-      - name: Enable Store integration
-        run: |
-          if [ "${{ steps.set-env.outputs.enable_store }}" == "true" ]; then
-            echo 'CUSTOM_PACKAGES="$CUSTOM_PACKAGES luci-app-store"' >> shell/custom-packages.sh
-            echo "✅ 已追加 luci-app-store"
-          else
-            echo "❎ 未启用 luci-app-store"
-          fi
-
       - name: Upload prepared files
         uses: actions/upload-artifact@v4
         with:
@@ -196,17 +133,11 @@ jobs:
         run: |
           luci_version="${{ github.event.inputs.luci_version }}"
           profile="${{ needs.prepare.outputs.profile }}"
-          include_docker="${{ needs.prepare.outputs.include_docker }}"
           rootfs_partsize="${{ needs.prepare.outputs.rootfs_partsize }}"
-          enable_pppoe="${{ needs.prepare.outputs.enable_pppoe }}"
-          pppoe_account="${{ needs.prepare.outputs.pppoe_account }}"
-          pppoe_password="${{ needs.prepare.outputs.pppoe_password }}"
 
           luci_version="${luci_version:-24.10.5}"
           profile="${profile:-friendlyarm_nanopi-r2s}"
-          include_docker="${include_docker:-no}"
           rootfs_partsize="${rootfs_partsize:-1024}"
-          enable_pppoe="${enable_pppoe:-no}"
 
           echo "Building for profile: $profile"
           echo "Using LUCI version: $luci_version"
@@ -221,11 +152,7 @@ jobs:
             -v "${{ github.workspace }}/shell:/home/build/immortalwrt/shell" \
             -v "${{ github.workspace }}/rockchip/build24.sh:/home/build/immortalwrt/build.sh" \
             -e PROFILE=$profile \
-            -e INCLUDE_DOCKER=$include_docker \
             -e ROOTFS_PARTSIZE=$rootfs_partsize \
-            -e ENABLE_PPPOE="$enable_pppoe" \
-            -e PPPOE_ACCOUNT="$pppoe_account" \
-            -e PPPOE_PASSWORD="$pppoe_password" \
             immortalwrt/imagebuilder:rockchip-armv8-openwrt-${luci_version} /bin/bash /home/build/immortalwrt/build.sh
           ls ${{ github.workspace }}/bin/targets/rockchip/armv8/
 
