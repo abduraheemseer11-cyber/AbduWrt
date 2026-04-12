@@ -55,7 +55,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
 
       - name: Set executable permissions
         run: chmod +x ${{ github.workspace }}/x86-64/build24.sh
@@ -107,7 +107,7 @@ jobs:
           cp ${{ github.workspace }}/bin/targets/x86/64/*squashfs-combined-efi.img.gz ${{ github.workspace }}
 
       - name: ✅ 上传固件到 artifact (for ISO generation)
-        uses: actions/upload-artifact@v4.3.6
+        uses: actions/upload-artifact@v4.4.0
         with:
           name: firmware-img
           path: |
