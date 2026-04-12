@@ -70,7 +70,7 @@ on:
       custom_router_ip:
         description: "请设置软路由的管理地址(注意仅对多网口软路由有效) 格式:192.168.x.1 或 10.x.x.1"
         required: true
-        default: "192.168.100.1"
+        default: "10.8.8.1"
       rootfs_partsize:
         description: '设置软件包大小 单位(MB)'
         required: true
@@ -125,7 +125,7 @@ jobs:
         id: set-env
         run: |
           echo "profile=${{ github.event.inputs.profile || 'friendlyarm_nanopi-r2s' }}" >> $GITHUB_OUTPUT
-          echo "custom_router_ip=${{ github.event.inputs.custom_router_ip || '192.168.100.1' }}" >> $GITHUB_OUTPUT
+          echo "custom_router_ip=${{ github.event.inputs.custom_router_ip || '10.8.8.1' }}" >> $GITHUB_OUTPUT
           echo "rootfs_partsize=${{ github.event.inputs.rootfs_partsize || '1024' }}" >> $GITHUB_OUTPUT
           echo "include_docker=${{ github.event.inputs.include_docker || 'no' }}" >> $GITHUB_OUTPUT
           echo "enable_store=${{ github.event.inputs.enable_store || 'false' }}" >> $GITHUB_OUTPUT

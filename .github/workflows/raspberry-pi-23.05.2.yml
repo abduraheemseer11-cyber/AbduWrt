@@ -1,0 +1,180 @@
+name: Raspberry Pi 23.05.2
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        type: choice
+        description: "请选择路由器型号"
+        required: true
+        options:
+          - rpi-3
+          - rpi-4
+          - rpi-5
+        default: rpi-4
+      enable_store:
+        description: "集成 store 商店"
+        required: false
+        type: boolean
+        default: false
+      include_docker:
+        description: |
+          是否编译 Docker 插件
+        required: true
+        default: 'no'
+        type: choice
+        options:
+          - 'yes'
+          - 'no'
+      size:
+        description: '请输入要编译固件大小 单位(MB)'
+        required: true
+        default: '1024'
+
+
+jobs:
+  prepare:
+    runs-on: ubuntu-22.04
+    outputs:
+      profile: ${{ steps.set-env.outputs.profile }}
+      enable_store: ${{ steps.set-env.outputs.enable_store }}
+      include_docker: ${{ steps.set-env.outputs.include_docker }}
+      size: ${{ steps.set-env.outputs.size }}
+      cpu: ${{ steps.set-env.outputs.cpu }}
+      tag: ${{ steps.set-env.outputs.tag }}
+      arch: ${{ steps.set-env.outputs.arch }}
+      build_tag: ${{ steps.set-env.outputs.build_tag }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.1.7
+
+      - name: Set environment variables
+        id: set-env
+        run: |
+          profile="${{ github.event.inputs.profile }}"
+          enable_store="${{ github.event.inputs.enable_store || 'false' }}"
+          include_docker="${{ github.event.inputs.include_docker || 'no' }}"
+          size="${{ github.event.inputs.size }}"
+
+          if [ "$profile" = "rpi-3" ]; then
+            cpu="bcm2710"
+            tag="bcm27xx-bcm2710-openwrt-23.05.2"
+            arch="rpi3.conf"
+          elif [ "$profile" = "rpi-4" ]; then
+            cpu="bcm2711"
+            tag="bcm27xx-bcm2711-openwrt-23.05.2"
+            arch="rpi4.conf"
+          elif [ "$profile" = "rpi-5" ]; then
+            cpu="bcm2712"
+            tag="bcm27xx-bcm2712-openwrt-23.05.2"
+            arch="rpi5.conf"
+          fi
+
+          build_tag="${{ github.event.inputs.profile || 'rpi-4' }}"
+
+          echo "profile=$profile" >> $GITHUB_OUTPUT
+          echo "enable_store=$enable_store" >> $GITHUB_OUTPUT
+          echo "include_docker=$include_docker" >> $GITHUB_OUTPUT
+          echo "size=$size" >> $GITHUB_OUTPUT
+          echo "cpu=$cpu" >> $GITHUB_OUTPUT
+          echo "tag=$tag" >> $GITHUB_OUTPUT
+          echo "arch=$arch" >> $GITHUB_OUTPUT
+          echo "build_tag=$build_tag" >> $GITHUB_OUTPUT
+
+      - name: Set executable permissions
+        run: chmod +x ${{ github.workspace }}/raspberrypi/23.05.2/build.sh
+
+      - name: Enable Store integration
+        run: |
+          if [ "${{ steps.set-env.outputs.enable_store }}" == "true" ]; then
+            echo 'CUSTOM_PACKAGES="$CUSTOM_PACKAGES luci-app-store"' >> shell/custom-packages.sh
+            echo "✅ 已追加 luci-app-store"
+          else
+            echo "❎ 未启用 luci-app-store"
+          fi
+
+      - name: Upload prepared files
+        uses: actions/upload-artifact@v4.3.6
+        with:
+          name: prepared-files
+          path: |
+            ${{ github.workspace }}/shell/custom-packages.sh
+
+  build:
+    runs-on: ubuntu-22.04
+    needs: prepare
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.1.7
+
+      - name: Download prepared files
+        uses: actions/download-artifact@v4.1.7
+        with:
+          name: prepared-files
+          path: ${{ github.workspace }}
+
+      - name: Build raspberrypi ImmortalWrt 23.05.2
+        run: |
+          profile="${{ needs.prepare.outputs.profile }}"
+          include_docker="${{ needs.prepare.outputs.include_docker }}"
+          size="${{ needs.prepare.outputs.size }}"
+          tag="${{ needs.prepare.outputs.tag }}"
+
+          echo "Building for profile: $profile"
+          
+          docker run --rm -i \
+            --user root \
+            -v "${{ github.workspace }}/bin:/home/build/immortalwrt/bin" \
+            -v "${{ github.workspace }}/files/etc/uci-defaults:/home/build/immortalwrt/files/etc/uci-defaults" \
+            -v "${{ github.workspace }}/arch/${{ needs.prepare.outputs.arch }}:/home/build/immortalwrt/files/etc/opkg/arch.conf" \
+            -v "${{ github.workspace }}/shell:/home/build/immortalwrt/shell" \
+            -v "${{ github.workspace }}/raspberrypi/23.05.2/build.sh:/home/build/openwrt/build.sh" \
+            -e PROFILE=$profile \
+            -e INCLUDE_DOCKER=$include_docker \
+            -e ROOTSIZE=$size \
+            immortalwrt/imagebuilder:$tag /bin/bash /home/build/openwrt/build.sh
+          
+          ls ${{ github.workspace }}/bin/targets/bcm27xx/${{ needs.prepare.outputs.cpu }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4.3.6
+        with:
+          name: build-artifacts
+          path: ${{ github.workspace }}/bin/
+
+  release:
+    runs-on: ubuntu-22.04
+    needs: [prepare, build]
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.1.7
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4.1.7
+        with:
+          name: build-artifacts
+          path: ${{ github.workspace }}/bin/
+
+      - name: Create info
+        run: |
+          cat > ${{ github.workspace }}/info.md <<EOF
+          ## 📡 Router Information
+
+          - ✳️ **Router Model**: ${{ needs.prepare.outputs.profile }}
+          - 🏠 **Management IP**: 192.168.1.1
+          - 👤 **Username**: root
+          - 🔑 **Password**: none
+          EOF
+
+      - name: Upload ImmortalWrt as release assets
+        uses: softprops/action-gh-release@v2.6.1
+        with:
+          tag_name: ${{ needs.prepare.outputs.build_tag }}
+          body_path: ${{ github.workspace }}/info.md
+          files: |
+            ${{ github.workspace }}/bin/targets/bcm27xx/${{ needs.prepare.outputs.cpu }}/*squashfs-factory.img.gz
+          token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

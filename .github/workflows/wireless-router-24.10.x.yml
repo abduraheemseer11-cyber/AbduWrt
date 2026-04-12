@@ -1,20 +1,3 @@
-# 此工作流99% 使用luci 24.10.x 来构建 极个别机型使用快照版和23.05.4版本来构建
-# 23.05.4 特有机型列表
-# abt_asr3000-ubootmod
-# cetron_ct3003-stock
-# cmcc_a10
-# cmcc_rax3000m-emmc-ubootmod
-# cmcc_rax3000m-nand-ubootmod
-# imou_lc-hx3001-ubootmod
-# jcg_q30 捷成
-# jcg_q30-ubootmod
-# qihoo_360t7-ubootmod
-# xiaomi_mi-router-wr30u-112m-nmbm
-# xiaomi_redmi-router-ax6000 该机型在24.10.5 分化为2个机型
-# —————————————————————————————24.10.5—————————————————————————————————
-# xiaomi_redmi-router-ax6000-stock ————原厂默认 bootloader（stock）版本
-# xiaomi_redmi-router-ax6000-ubootmod—————改装过 bootloader 的版本（ubootmod）
-
 name: Wireless Router 24.10.x
 
 on:
@@ -488,7 +471,7 @@ on:
       custom_router_ip:
         description: "请设置路由器的管理地址 格式:192.168.x.1 或 10.x.x.1"
         required: true
-        default: "192.168.100.1"
+        default: "10.8.8.1"
       enable_store:
         description: "集成 store 商店"
         required: false
