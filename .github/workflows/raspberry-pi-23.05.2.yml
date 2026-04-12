@@ -164,10 +164,10 @@ jobs:
           cat > ${{ github.workspace }}/info.md <<EOF
           ## 📡 Router Information
 
-          - ✳️ **Router Model**: ${{ needs.prepare.outputs.profile }}
-          - 🏠 **Management IP**: 192.168.1.1
+          - ✳️ **Device Model**: ${{ needs.prepare.outputs.profile }}
+          - 🏠 **LAN IP**: 192.168.1.1
           - 👤 **Username**: root
-          - 🔑 **Password**: none
+          - 🔑 **Password**: root
           EOF
 
       - name: Upload ImmortalWrt as release assets

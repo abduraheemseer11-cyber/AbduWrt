@@ -640,7 +640,7 @@ jobs:
       - name: Create info
         run: |
           custom_router_ip="${{ github.event.inputs.custom_router_ip }}"
-          extra_content_ip="#### Management IP $custom_router_ip"
+          extra_content_ip="#### LAN IP $custom_router_ip"
           echo -e "\n $extra_content_ip" >> ${{ github.workspace }}/mediatek-filogic/info.md
           
           
