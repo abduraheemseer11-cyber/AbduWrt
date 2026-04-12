@@ -46,7 +46,7 @@ jobs:
       build_tag: ${{ steps.set-env.outputs.build_tag }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4.2.0
+        uses: actions/checkout@v4
 
       - name: Set environment variables
         id: set-env
@@ -94,7 +94,7 @@ jobs:
           fi
 
       - name: Upload prepared files
-        uses: actions/upload-artifact@v4.4.0
+        uses: actions/upload-artifact@v4
         with:
           name: prepared-files
           path: |
@@ -105,10 +105,10 @@ jobs:
     needs: prepare
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4.2.0
+        uses: actions/checkout@v4
 
       - name: Download prepared files
-        uses: actions/download-artifact@v4.1.7
+        uses: actions/download-artifact@v4
         with:
           name: prepared-files
           path: ${{ github.workspace }}
@@ -137,7 +137,7 @@ jobs:
           ls ${{ github.workspace }}/bin/targets/bcm27xx/${{ needs.prepare.outputs.cpu }}
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4.4.0
+        uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
           path: ${{ github.workspace }}/bin/
@@ -149,10 +149,10 @@ jobs:
       contents: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4.2.0
+        uses: actions/checkout@v4
 
       - name: Download build artifacts
-        uses: actions/download-artifact@v4.1.7
+        uses: actions/download-artifact@v4
         with:
           name: build-artifacts
           path: ${{ github.workspace }}/bin/
