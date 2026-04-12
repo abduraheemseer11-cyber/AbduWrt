@@ -55,10 +55,12 @@ on:
 jobs:
   build_immortalwrt:
     runs-on: ubuntu-22.04
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.1.7
 
       - name: Set executable permissions
         run: chmod +x ${{ github.workspace }}/x86-64/build24.sh
@@ -110,7 +112,7 @@ jobs:
           cp ${{ github.workspace }}/bin/targets/x86/64/*squashfs-combined-efi.img.gz ${{ github.workspace }}
 
       - name: ✅ 上传固件到 artifact (for ISO generation)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.3.6
         with:
           name: firmware-img
           path: |
@@ -119,10 +121,12 @@ jobs:
   build_installer_iso:
     runs-on: ubuntu-22.04
     needs: build_immortalwrt
+    permissions:
+      contents: write
 
     steps:
       - name: Download firmware artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v4.1.7
         with:
           name: firmware-img
 
